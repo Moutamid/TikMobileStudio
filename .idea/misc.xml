@@ -4,8 +4,9 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/BridgeLinxProject/TikMobileStudio/app/src/main/res/drawable/etbg.xml" value="0.212" />
-        <entry key="..\:/BridgeLinxProject/TikMobileStudio/app/src/main/res/layout/activity_main.xml" value="0.18" />
+        <entry key="..\:/BridgeLinxProject/TikMobileStudio/app/src/main/res/layout/activity_main.xml" value="0.2" />
         <entry key="..\:/BridgeLinxProject/TikMobileStudio/app/src/main/res/layout/activity_splash_screen.xml" value="0.22" />
+        <entry key="..\:/BridgeLinxProject/TikMobileStudio/app/src/main/res/layout/activity_start.xml" value="0.209375" />
       </map>
     </option>
   </component>
