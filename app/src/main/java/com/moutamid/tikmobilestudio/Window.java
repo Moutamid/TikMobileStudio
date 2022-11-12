@@ -3,6 +3,7 @@ package com.moutamid.tikmobilestudio;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Build;
@@ -21,10 +22,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.camerakit.CameraKit;
 import com.camerakit.CameraKitView;
 
-public class Window extends AppCompatActivity{
+public class Window extends ContextWrapper {
 
     // declaring required variables
-    private Context context;
+   // private Context context;
     private View mView;
     private WindowManager.LayoutParams mParams;
     private WindowManager mWindowManager;
@@ -32,8 +33,9 @@ public class Window extends AppCompatActivity{
     public CameraKitView cameraKitView;
     TextView name;
 
-    public Window(Context context, Activity activity, PassData data){
-        this.context=context;
+    public Window(Context context){
+        super(context);
+        //this.context=context;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // set the layout parameters of the window
@@ -50,6 +52,7 @@ public class Window extends AppCompatActivity{
                     PixelFormat.TRANSLUCENT);
 
         }
+
         // getting a LayoutInflater
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         // inflating the view with the custom layout we created
@@ -58,6 +61,9 @@ public class Window extends AppCompatActivity{
         // the view from the window
 
         cameraKitView = mView.findViewById(R.id.camera);
+        cameraKitView.onPause();
+        cameraKitView.onStop();
+        cameraKitView.onStart();
         //cameraKitView.requestPermissions(activity);
         name = mView.findViewById(R.id.name);
 
@@ -66,7 +72,9 @@ public class Window extends AppCompatActivity{
 
         name.setOnClickListener(v -> {
             close();
-            data.stopservice(activity);
+            stopService(new Intent(getApplicationContext(), ForegroundService.class));
+            cameraKitView.onPause();
+            cameraKitView.onStop();
         });
 
         // Define the position of the
@@ -92,36 +100,12 @@ public class Window extends AppCompatActivity{
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        cameraKitView.onStart();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        cameraKitView.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        cameraKitView.onPause();
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        cameraKitView.onStop();
-        super.onStop();
-    }
-
 
     public void close() {
 
         try {
             // remove the view from the window
-            ((WindowManager) context.getSystemService(WINDOW_SERVICE)).removeView(mView);
+            ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(mView);
             // invalidate the view
             mView.invalidate();
             // remove all views

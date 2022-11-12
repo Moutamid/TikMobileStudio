@@ -17,8 +17,8 @@
         android:layout_marginBottom="20dp"
         android:adjustViewBounds="true"
         android:keepScreenOn="true"
+        android:visibility="visible"
         app:camera_facing="back"
-        android:visibility="gone"
         app:camera_flash="auto"
         app:camera_focus="continuous"
         app:camera_permissions="camera" />
@@ -29,6 +29,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/etbg"
         android:gravity="center"
+        android:layout_alignParentBottom="true"
         android:orientation="horizontal"
         android:padding="16dp">
 

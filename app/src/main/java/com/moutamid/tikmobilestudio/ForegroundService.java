@@ -41,11 +41,11 @@ public class ForegroundService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             startMyOwnForeground();
         else
-            startForeground(1, new Notification());
+            startForeground(2, new Notification());
 
         // create an instance of Window class
         // and display the content on screen
-        Window window=new Window(this, a, data);
+        Window window=new Window(this);
         window.open();
     }
 
@@ -95,4 +95,10 @@ public class ForegroundService extends Service {
         startForeground(2, notification);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopForeground(true);
+        //stopService(new Intent(getApplicationContext(), ForegroundService.class));
+    }
 }

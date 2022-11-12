@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     int requestCode;
     String[] permissions;
     int[] grantResults;
+    private CameraKitView cameraKitView;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -46,7 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
         name = findViewById(R.id.name);
         start = findViewById(R.id.btnStart);
-
+        cameraKitView = findViewById(R.id.camera);
+        cameraKitView.setFacing(CameraKit.FACING_FRONT);
         /*Dexter.withContext(this)
                 .withPermission(Manifest.permission.CAMERA)
                 .withListener(new PermissionListener() {
@@ -90,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
 
     * */
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        cameraKitView.onStart();
+    }
+
     public void startService(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // check if the user has already granted
@@ -128,6 +136,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         startService();
+        cameraKitView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        cameraKitView.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        cameraKitView.onStop();
+        super.onStop();
     }
 
     /** A safe way to get an instance of the Camera object. */
@@ -187,5 +208,6 @@ public class MainActivity extends AppCompatActivity {
         this.requestCode = requestCode;
         this.permissions = permissions;
         this.grantResults = grantResults;
+        cameraKitView.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }
