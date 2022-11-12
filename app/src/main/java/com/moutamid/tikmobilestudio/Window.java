@@ -27,8 +27,11 @@ public class Window extends ContextWrapper {
     // declaring required variables
    // private Context context;
     private View mView;
+    private View mViewB;
     private WindowManager.LayoutParams mParams;
+    private WindowManager.LayoutParams mParamsB;
     private WindowManager mWindowManager;
+    private WindowManager mWindowManagerB;
     private LayoutInflater layoutInflater;
     public CameraKitView cameraKitView;
     TextView name;
@@ -40,6 +43,18 @@ public class Window extends ContextWrapper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // set the layout parameters of the window
             mParams = new WindowManager.LayoutParams(
+                    // Shrink the window to wrap the content rather
+                    // than filling the screen
+                    WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.MATCH_PARENT,
+                    // Display it on top of other application windows
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    // Don't let it grab the input focus
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    // Make the underlying application window visible
+                    // through any transparent parts
+                    PixelFormat.TRANSLUCENT);
+
+            mParamsB = new WindowManager.LayoutParams(
                     // Shrink the window to wrap the content rather
                     // than filling the screen
                     WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
@@ -57,15 +72,16 @@ public class Window extends ContextWrapper {
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         // inflating the view with the custom layout we created
         mView = layoutInflater.inflate(R.layout.activity_start, null);
+        mViewB = layoutInflater.inflate(R.layout.banner, null);
         // set onClickListener on the remove button, which removes
         // the view from the window
 
         cameraKitView = mView.findViewById(R.id.camera);
-        cameraKitView.onPause();
-        cameraKitView.onStop();
+//        cameraKitView.onPause();
+//        cameraKitView.onStop();
         cameraKitView.onStart();
         //cameraKitView.requestPermissions(activity);
-        name = mView.findViewById(R.id.name);
+        name = mViewB.findViewById(R.id.name);
 
         cameraKitView.setFacing(CameraKit.FACING_FRONT);
         //data.data(cameraKitView);
@@ -79,8 +95,11 @@ public class Window extends ContextWrapper {
 
         // Define the position of the
         // window within the screen
-        mParams.gravity = Gravity.CENTER;
+        mParams.gravity = Gravity.RIGHT;
         mWindowManager = (WindowManager)context.getSystemService(WINDOW_SERVICE);
+
+        mParamsB.gravity = Gravity.BOTTOM;
+        mWindowManagerB = (WindowManager)context.getSystemService(WINDOW_SERVICE);
 
     }
 
@@ -89,9 +108,10 @@ public class Window extends ContextWrapper {
         try {
             // check if the view is already
             // inflated or present in the window
-            if(mView.getWindowToken()==null) {
-                if(mView.getParent()==null) {
+            if(mView.getWindowToken()==null && mViewB.getWindowToken()==null) {
+                if(mView.getParent()==null && mViewB.getParent()==null) {
                     mWindowManager.addView(mView, mParams);
+                    mWindowManagerB.addView(mViewB, mParamsB);
                 }
             }
         } catch (Exception e) {
@@ -106,10 +126,13 @@ public class Window extends ContextWrapper {
         try {
             // remove the view from the window
             ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(mView);
+            ((WindowManager) getSystemService(WINDOW_SERVICE)).removeView(mViewB);
             // invalidate the view
             mView.invalidate();
+            mViewB.invalidate();
             // remove all views
             ((ViewGroup) mView.getParent()).removeAllViews();
+            ((ViewGroup) mViewB.getParent()).removeAllViews();
             stopService(new Intent(this, ForegroundService.class));
 
             // the above steps are necessary when you are adding and removing

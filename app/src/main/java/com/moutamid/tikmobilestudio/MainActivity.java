@@ -137,6 +137,9 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         startService();
         cameraKitView.onResume();
+        /*Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+        startActivity(intent);*/
     }
 
     @Override

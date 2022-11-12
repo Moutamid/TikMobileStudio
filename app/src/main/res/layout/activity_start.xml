@@ -10,7 +10,6 @@
         android:id="@+id/camera"
         android:layout_width="100dp"
         android:layout_height="150dp"
-        android:layout_alignParentRight="true"
         android:layout_marginStart="20dp"
         android:layout_marginTop="20dp"
         android:layout_marginEnd="8dp"
@@ -22,26 +21,5 @@
         app:camera_flash="auto"
         app:camera_focus="continuous"
         app:camera_permissions="camera" />
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/etbg"
-        android:gravity="center"
-        android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
-        android:padding="16dp">
-
-        <TextView
-            android:id="@+id/name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:text="name"
-            android:textColor="@color/white"
-            android:textSize="24sp" />
-
-    </LinearLayout>
 
 </RelativeLayout>
