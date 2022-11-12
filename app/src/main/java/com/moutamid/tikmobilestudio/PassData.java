@@ -1,5 +1,12 @@
 package com.moutamid.tikmobilestudio;
 
-public interface PassData {
-    void data(int requestCode, String[] permissions, int[] grantResults, String name);
+import android.app.Activity;
+import android.content.Context;
+import android.os.Parcelable;
+
+import com.camerakit.CameraKitView;
+
+public interface PassData extends Parcelable {
+    void data(CameraKitView cameraKitView);
+    void stopservice(Activity context);
 }

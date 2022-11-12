@@ -21,7 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.camerakit.CameraKit;
 import com.camerakit.CameraKitView;
 
-public class Window extends AppCompatActivity implements PassData{
+public class Window extends AppCompatActivity{
 
     // declaring required variables
     private Context context;
@@ -32,7 +32,7 @@ public class Window extends AppCompatActivity implements PassData{
     public CameraKitView cameraKitView;
     TextView name;
 
-    public Window(Context context){
+    public Window(Context context, Activity activity, PassData data){
         this.context=context;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -44,7 +44,7 @@ public class Window extends AppCompatActivity implements PassData{
                     // Display it on top of other application windows
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     // Don't let it grab the input focus
-                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                     // Make the underlying application window visible
                     // through any transparent parts
                     PixelFormat.TRANSLUCENT);
@@ -58,23 +58,21 @@ public class Window extends AppCompatActivity implements PassData{
         // the view from the window
 
         cameraKitView = mView.findViewById(R.id.camera);
+        //cameraKitView.requestPermissions(activity);
         name = mView.findViewById(R.id.name);
 
         cameraKitView.setFacing(CameraKit.FACING_FRONT);
-        cameraKitView.onStart();
+        //data.data(cameraKitView);
 
         name.setOnClickListener(v -> {
             close();
+            data.stopservice(activity);
         });
 
         // Define the position of the
         // window within the screen
-        /*mParams.gravity = Gravity.CENTER;*/
+        mParams.gravity = Gravity.CENTER;
         mWindowManager = (WindowManager)context.getSystemService(WINDOW_SERVICE);
-
-    }
-
-    public Window() {
 
     }
 
@@ -123,23 +121,17 @@ public class Window extends AppCompatActivity implements PassData{
 
         try {
             // remove the view from the window
-            ((WindowManager)context.getSystemService(WINDOW_SERVICE)).removeView(mView);
+            ((WindowManager) context.getSystemService(WINDOW_SERVICE)).removeView(mView);
             // invalidate the view
             mView.invalidate();
             // remove all views
-            ((ViewGroup)mView.getParent()).removeAllViews();
+            ((ViewGroup) mView.getParent()).removeAllViews();
             stopService(new Intent(this, ForegroundService.class));
 
             // the above steps are necessary when you are adding and removing
             // the view simultaneously, it might give some exceptions
         } catch (Exception e) {
-            Log.d("Error2",e.toString());
+            Log.d("Error2", e.toString());
         }
-    }
-
-    @Override
-    public void data(int requestCode, String[] permissions, int[] grantResults, String name) {
-        cameraKitView.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        this.name.setText(name);
     }
 }

@@ -18,6 +18,7 @@
         android:adjustViewBounds="true"
         android:keepScreenOn="true"
         app:camera_facing="back"
+        android:visibility="gone"
         app:camera_flash="auto"
         app:camera_focus="continuous"
         app:camera_permissions="camera" />
@@ -26,7 +27,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:background="@drawable/etbg"
         android:gravity="center"
         android:orientation="horizontal"
