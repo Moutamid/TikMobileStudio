@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Parcel;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     String[] permissions;
     int[] grantResults;
     private CameraKitView cameraKitView;
+    SharedPreferences sharedPreferences;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -49,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         start = findViewById(R.id.btnStart);
         cameraKitView = findViewById(R.id.camera);
         cameraKitView.setFacing(CameraKit.FACING_FRONT);
+        sharedPreferences = new SharedPreferences(this);
         /*Dexter.withContext(this)
                 .withPermission(Manifest.permission.CAMERA)
                 .withListener(new PermissionListener() {
@@ -74,6 +77,11 @@ public class MainActivity extends AppCompatActivity {
                 name.setError("Please Add Your Name");
             } else {
                 if (checkCameraHardware(this)){
+                    if (!isServiceRunningInForeground(this, ForegroundService.class)){
+                        sharedPreferences.saveName(name.getText().toString());
+                    } else {
+                        Toast.makeText(this, "Service is already running, Please Close that First", Toast.LENGTH_SHORT).show();
+                    }
                     checkOverlayPermission();
                     startService();
                 } else
@@ -118,6 +126,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                if (service.foreground) {
+                    return true;
+                }
+
+            }
+        }
+        return false;
+    }
+
     // method to ask user to grant the Overlay permission
     public void checkOverlayPermission(){
 
@@ -135,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        startService();
+        //startService();
         cameraKitView.onResume();
         /*Intent intent = new Intent(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);

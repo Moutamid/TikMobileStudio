@@ -35,10 +35,12 @@ public class Window extends ContextWrapper {
     private LayoutInflater layoutInflater;
     public CameraKitView cameraKitView;
     TextView name;
+    SharedPreferences sharedPreferences;
 
     public Window(Context context){
         super(context);
         //this.context=context;
+        sharedPreferences = new SharedPreferences(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // set the layout parameters of the window
@@ -82,7 +84,7 @@ public class Window extends ContextWrapper {
         cameraKitView.onStart();
         //cameraKitView.requestPermissions(activity);
         name = mViewB.findViewById(R.id.name);
-
+        name.setText(sharedPreferences.getName());
         cameraKitView.setFacing(CameraKit.FACING_FRONT);
         //data.data(cameraKitView);
 
