@@ -30,12 +30,14 @@
         <service
             android:name=".ForegroundService"
             android:enabled="true"
-            android:exported="true"/>
+            android:exported="true"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
 
         <activity
             android:name=".StartActivity"
             android:exported="false"
-            tools:ignore="Instantiatable" />
+            tools:ignore="Instantiatable"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
         <activity
             android:name=".SplashScreenActivity"
             android:exported="true">
@@ -47,7 +49,8 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:exported="false"></activity>
+            android:exported="false"
+            android:configChanges="orientation|keyboardHidden|screenSize"></activity>
     </application>
 
 </manifest>

@@ -7,6 +7,7 @@ import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.camerakit.CameraKit;
@@ -16,6 +17,7 @@ import java.util.List;
 
 public class StartActivity extends AppCompatActivity {
     TextView nameTv;
+    ImageView closeImg;
     private CameraKitView cameraKitView;
 
     @Override
@@ -24,7 +26,7 @@ public class StartActivity extends AppCompatActivity {
         setContentView(R.layout.activity_start);
         cameraKitView = findViewById(R.id.camera);
         nameTv = findViewById(R.id.name);
-
+        closeImg = findViewById(R.id.close);
         String name = getIntent().getStringExtra("name");
         nameTv.setText(name);
 

@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.widget.Button;
@@ -40,18 +41,19 @@ public class MainActivity extends AppCompatActivity {
     int[] grantResults;
     private CameraKitView cameraKitView;
     SharedPreferences sharedPreferences;
+    private int flag;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         name = findViewById(R.id.name);
         start = findViewById(R.id.btnStart);
         cameraKitView = findViewById(R.id.camera);
         cameraKitView.setFacing(CameraKit.FACING_FRONT);
         sharedPreferences = new SharedPreferences(this);
+
         /*Dexter.withContext(this)
                 .withPermission(Manifest.permission.CAMERA)
                 .withListener(new PermissionListener() {
