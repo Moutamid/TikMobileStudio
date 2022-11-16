@@ -5,16 +5,19 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="70dp"
         android:background="@drawable/etbg"
         android:backgroundTint="@color/black"
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="16dp"
         android:id="@+id/button_layout"
-        android:layout_toLeftOf="@+id/rotate"
+        android:layout_toLeftOf="@+id/close"
         android:visibility="visible"
-        android:layout_centerInParent="true">
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="20dp">
 
         <TextView
             android:id="@+id/name"
@@ -33,7 +36,7 @@
 
     </LinearLayout>
 
-    <ImageView
+   <!-- <ImageView
         android:id="@+id/rotate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -41,16 +44,17 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_toLeftOf="@+id/close"
-        android:src="@drawable/ic_baseline_screen_rotation_24" />
+        android:src="@drawable/ic_baseline_screen_rotation_24" />-->
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_baseline_close_24"
         android:id="@+id/close"
+        android:layout_width="wrap_content"
+        android:layout_height="70dp"
         android:layout_alignParentRight="true"
-        android:layout_centerInParent="true"
         android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"/>
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:src="@drawable/ic_baseline_close_24" />
 
 </RelativeLayout>

@@ -132,7 +132,7 @@ public class Window extends ContextWrapper {
         //cameraKitView.requestPermissions(activity);
         name = mViewB.findViewById(R.id.name);
         imageView = mViewB.findViewById(R.id.close);
-        rotateImg = mViewB.findViewById(R.id.rotate);
+      //  rotateImg = mViewB.findViewById(R.id.rotate);
         name.setText(sharedPreferences.getName());
         cameraKitView.setFacing(CameraKit.FACING_FRONT);
         //data.data(cameraKitView);
@@ -149,7 +149,7 @@ public class Window extends ContextWrapper {
 
         mWindowManager = (WindowManager)context.getSystemService(WINDOW_SERVICE);
 
-        mParamsB.gravity = Gravity.BOTTOM ;
+        mParamsB.gravity = Gravity.BOTTOM | Gravity.END;
         mWindowManagerB = (WindowManager)context.getSystemService(WINDOW_SERVICE);
 
        // mParams.screenOrientation = port;
@@ -174,7 +174,7 @@ public class Window extends ContextWrapper {
 
             mParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
             mParamsB.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-        }*/
+        }
 
         rotateImg.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -187,42 +187,13 @@ public class Window extends ContextWrapper {
                     mView.animate().rotation(mView.getRotation() - 90);
                     mViewB.animate().rotation(mViewB.getRotation() -90);
                 }
-
-              /*  customOrientationEventListener = new
-                        CustomOrientationEventListener(getBaseContext()) {
-                            @Override
-                            public void onSimpleOrientationChanged(int orientation) {
-                                switch(orientation){
-                                    case ROTATION_O:
-                                        //rotate as on portrait
-                                        mView.animate().rotation(0).setDuration(500).start();
-                                        break;
-                                    case ROTATION_90:
-                                        //rotate as left on top
-                                        mView.animate().rotation(-90).setDuration(500).start();
-                                        break;
-                                    case ROTATION_270:
-                                        //rotate as right on top
-                                        mView.animate().rotation(90).setDuration(500).start();
-                                        break;
-                                    case ROTATION_180:
-                                        //rotate as upside down
-                                        mView.animate().rotation(180).setDuration(500).start();
-                                        break;
-
-                                }
-                            }
-                        };*/
             }
-        });
+        });*/
 
 
         dragDrop(mParams);
-
-       // dragDropB(mParamsB);
+        dragDropB(mParamsB);
     }
-
-
 
     private void dragDropB(WindowManager.LayoutParams params) {
         name.setOnTouchListener(new View.OnTouchListener() {
@@ -232,10 +203,9 @@ public class Window extends ContextWrapper {
             private float initialTouchY;
             boolean flag3 = true;
             boolean flag = false;
-            /**this does not work since framelayout could not be cast to the Window Manager**/
             @Override
-            public boolean onTouch(final View v, final MotionEvent event) {
-                switch (event.getAction()) {
+            public boolean onTouch(View view, MotionEvent event) {
+                switch (event.getAction() & event.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
                         params.alpha = 1.0f;
                         //remember the initial position.
@@ -247,19 +217,6 @@ public class Window extends ContextWrapper {
                         initialTouchY = event.getRawY();
                         return true;
                     case MotionEvent.ACTION_UP:
-
-                       /* if ((System.currentTimeMillis() - interval) < 300) {
-                            // if time is less than 300 ms it means the user has clicked your view.
-                            // handle your click here
-                        } else {
-                            //Calculate the X and Y coordinates of the view and update view
-                            mParams.x = initialX + (int) (event.getRawX() - initialTouchX);
-                            mParams.y = initialY + (int) (event.getRawY() - initialTouchY);
-
-
-                            //Update the layout with new X & Y coordinate
-                            mWindowManager.updateViewLayout(mView, mParams);
-                        }*/
                         flag = flag3;
                         if (Math.abs(initialTouchX - event.getRawX()) >= 25f){
                             return flag;
@@ -272,38 +229,21 @@ public class Window extends ContextWrapper {
                             }
                         }
                     case MotionEvent.ACTION_MOVE:
-                        //Calculate the X and Y coordinates of the view.
-                        //    mParams.x = initialX + (int) (event.getRawX() - initialTouchX);
-                        //  mParams.y = initialY + (int) (event.getRawY() - initialTouchY);
-                        initialX = params.x;
-                        initialY = params.y;
-                        if (!(event.getRawX() < (float)(initialX - params.width / 2)) ||
-                                !(event.getRawY() < (float)(initialY - params.height / 2))
-                                || (double)event.getRawX() > (double)initialX +
-                                (double) params.width * 1.2D) {
-                        }
-
-                        params.x = (int)(event.getRawX() - (float)(params.width / 2));
-                        params.y = (int)(event.getRawY() - (float) params.height);
-
-
+                        params.gravity = Gravity.LEFT | Gravity.RIGHT;
+                        params.x = initialX + (int) (event.getRawX() - initialTouchX);
+                        params.y = initialY + (int) (event.getRawY() - initialTouchY);
                         //Update the layout with new X & Y coordinate
-                        mWindowManager.updateViewLayout(mView,params);
+                        mWindowManagerB.updateViewLayout(mViewB,params);
                         return true;
                 }
                 return flag;
+
             }
         });
-
     }
 
-    private int dpToPx(int i) {
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        return Math.round(i * (displayMetrics.xdpi/DisplayMetrics.DENSITY_DEFAULT));
-    }
 
     public void dragDrop(WindowManager.LayoutParams params){
-
         cameraKitView.setOnTouchListener(new View.OnTouchListener() {
             private int initialX;
             private int initialY;
@@ -311,10 +251,9 @@ public class Window extends ContextWrapper {
             private float initialTouchY;
             boolean flag3 = true;
             boolean flag = false;
-            /**this does not work since framelayout could not be cast to the Window Manager**/
             @Override
-            public boolean onTouch(final View v, final MotionEvent event) {
-                switch (event.getAction()) {
+            public boolean onTouch(View view, MotionEvent event) {
+                switch (event.getAction() & event.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
                         params.alpha = 1.0f;
                         //remember the initial position.
@@ -326,19 +265,6 @@ public class Window extends ContextWrapper {
                         initialTouchY = event.getRawY();
                         return true;
                     case MotionEvent.ACTION_UP:
-
-                       /* if ((System.currentTimeMillis() - interval) < 300) {
-                            // if time is less than 300 ms it means the user has clicked your view.
-                            // handle your click here
-                        } else {
-                            //Calculate the X and Y coordinates of the view and update view
-                            mParams.x = initialX + (int) (event.getRawX() - initialTouchX);
-                            mParams.y = initialY + (int) (event.getRawY() - initialTouchY);
-
-
-                            //Update the layout with new X & Y coordinate
-                            mWindowManager.updateViewLayout(mView, mParams);
-                        }*/
                         flag = flag3;
                         if (Math.abs(initialTouchX - event.getRawX()) >= 25f){
                             return flag;
@@ -351,29 +277,16 @@ public class Window extends ContextWrapper {
                             }
                         }
                     case MotionEvent.ACTION_MOVE:
-                        //Calculate the X and Y coordinates of the view.
-                    //    mParams.x = initialX + (int) (event.getRawX() - initialTouchX);
-                      //  mParams.y = initialY + (int) (event.getRawY() - initialTouchY);
-                        initialX = params.x;
-                        initialY = params.y;
-                        if (!(event.getRawX() < (float)(initialX - params.width / 2)) ||
-                                !(event.getRawY() < (float)(initialY - params.height / 2))
-                                || (double)event.getRawX() > (double)initialX +
-                                (double) params.width * 1.2D) {
-                        }
-
-                        params.x = (int)(event.getRawX() - (float)(params.width / 2));
-                        params.y = (int)(event.getRawY() - (float) params.height);
-
-
-                        //Update the layout with new X & Y coordinate
+                          params.x = initialX + (int) (event.getRawX() - initialTouchX);
+                          params.y = initialY + (int) (event.getRawY() - initialTouchY);
+                                //Update the layout with new X & Y coordinate
                         mWindowManager.updateViewLayout(mView,params);
                         return true;
                 }
-                 return flag;
+                return flag;
+
             }
         });
-
     }
 
     public void open() {
