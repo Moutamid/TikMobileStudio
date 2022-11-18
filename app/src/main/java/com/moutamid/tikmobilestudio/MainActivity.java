@@ -1,7 +1,9 @@
 package com.moutamid.tikmobilestudio;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
@@ -10,38 +12,40 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.hardware.Camera;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.view.Surface;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.single.PermissionListener;
-import com.camerakit.CameraKit;
-import com.camerakit.CameraKitView;
 
 import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE = 99107;
     Button start;
     EditText name;
-    int requestCode;
-    String[] permissions;
-    int[] grantResults;
-    private CameraKitView cameraKitView;
+    private Executor executor = Executors.newSingleThreadExecutor();
+    private int REQUEST_CODE_PERMISSIONS = 1001;
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     SharedPreferences sharedPreferences;
     private int flag;
+
+    private Camera mCamera;
+    private CameraPreview mPreview;
+    private LinearLayout cameraPreview;
+    private boolean cameraFront = true;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -50,8 +54,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         name = findViewById(R.id.name);
         start = findViewById(R.id.btnStart);
-        cameraKitView = findViewById(R.id.camera);
-        cameraKitView.setFacing(CameraKit.FACING_FRONT);
+        cameraPreview = findViewById(R.id.camera);
+       // cameraKitView.setFacing(CameraKit.FACING_FRONT);
         sharedPreferences = new SharedPreferences(this);
 
         /*Dexter.withContext(this)
@@ -74,6 +78,12 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .check();
 */
+        if(allPermissionsGranted()){
+            startCamera(); //start camera if permission has been granted by user
+        } else{
+            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
+        }
+
         start.setOnClickListener(v -> {
             if (name.getText().toString().isEmpty()){
                 name.setError("Please Add Your Name");
@@ -92,6 +102,60 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void startCamera() {
+        int cameraId = findFrontFacingCamera();
+        mCamera =  Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+      //  mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
+        mPreview = new CameraPreview(this, mCamera);
+        cameraPreview.addView(mPreview);
+        setCameraDisplayOrientation(MainActivity.this,cameraId,mCamera);
+        mCamera.startPreview();
+    }
+
+
+    public static void setCameraDisplayOrientation(Activity activity,
+                                                   int cameraId, android.hardware.Camera camera) {
+        android.hardware.Camera.CameraInfo info =
+                new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
+        int rotation = activity.getWindowManager().getDefaultDisplay()
+                .getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0: degrees = 0; break;
+            case Surface.ROTATION_90: degrees = 90; break;
+            case Surface.ROTATION_180: degrees = 180; break;
+            case Surface.ROTATION_270: degrees = 270; break;
+        }
+
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // compensate the mirror
+        } else {  // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
+        camera.setDisplayOrientation(result);
+    }
+
+    private int findFrontFacingCamera() {
+
+        int cameraId = -1;
+        // Search for the front facing camera
+        int numberOfCameras = Camera.getNumberOfCameras();
+        for (int i = 0; i < numberOfCameras; i++) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(i, info);
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                cameraId = i;
+                cameraFront = true;
+                break;
+            }
+        }
+        return cameraId;
+
+    }
+
     /*
     *
         //start
@@ -105,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        cameraKitView.onStart();
     }
 
     public void startService(){
@@ -155,25 +218,37 @@ public class MainActivity extends AppCompatActivity {
 
     // check for permission again when user grants it from
     // the device settings, and start the service
-    @Override
-    protected void onResume() {
+    public void onResume() {
+
         super.onResume();
-        //startService();
-        cameraKitView.onResume();
-        /*Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_HOME);
-        startActivity(intent);*/
+        if(mCamera == null) {
+            mCamera = Camera.open();
+            mCamera.setDisplayOrientation(90);
+            mPreview.refreshCamera(mCamera);
+        }else {
+
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        cameraKitView.onPause();
+        //when on Pause, release camera in order to be used from other applications
+        releaseCamera();
     }
 
+    private void releaseCamera() {
+        // stop and release camera
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.setPreviewCallback(null);
+            mCamera.release();
+            mCamera = null;
+        }
+    }
     @Override
     protected void onStop() {
-        cameraKitView.onStop();
         super.onStop();
     }
 
@@ -189,51 +264,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public PassData getData(){
-        return passData;
-    }
-    public Activity getAct(){
-        return MainActivity.this;
-    }
 
-    private PassData passData = new PassData() {
-        @Override
-        public int describeContents() {
-            return 0;
-        }
+    private boolean allPermissionsGranted(){
 
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {}
-
-        @Override
-        public void data(CameraKitView cameraKitView) {
-            //Toast.makeText(MainActivity.this, "camera", Toast.LENGTH_SHORT).show();
-            //cameraKitView.onStart();
-            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            // You can use the API that requires the permission.
-            //performAction(...);
-            } else {
-                // You can directly ask for the permission.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(new String[] { Manifest.permission.CAMERA }, REQUEST_CODE);
-                }
+        for(String permission : REQUIRED_PERMISSIONS){
+            if(ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED){
+                return false;
             }
-            cameraKitView.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
-
-        @Override
-        public void stopservice(Activity context) {
-            Toast.makeText(MainActivity.this, "fgh", Toast.LENGTH_SHORT).show();
-            context.stopService(new Intent(context.getApplicationContext(), ForegroundService.class));
-        }
-    };
+        return true;
+    }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        this.requestCode = requestCode;
-        this.permissions = permissions;
-        this.grantResults = grantResults;
-        cameraKitView.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE) {
+            if (allPermissionsGranted()) {
+                startCamera();
+            } else {
+                Toast.makeText(this, "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+                this.finish();
+            }
+        }
     }
+
+
+
 }

@@ -39,8 +39,8 @@ public class ForegroundService extends Service {
         // create the custom or default notification
         // based on the android version
         MainActivity m = new MainActivity();
-        PassData data = m.getData();
-        Activity a = m.getAct();
+       // PassData data = m.getData();
+        //Activity a = m.getAct();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             startMyOwnForeground();
         else

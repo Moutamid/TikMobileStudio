@@ -56,7 +56,7 @@
             android:textStyle="bold"
             android:text="Start" />
 
-        <com.camerakit.CameraKitView
+        <LinearLayout
             android:id="@+id/camera"
             android:layout_width="100dp"
             android:layout_height="150dp"
@@ -67,11 +67,7 @@
             android:layout_marginBottom="20dp"
             android:adjustViewBounds="true"
             android:keepScreenOn="true"
-            android:visibility="gone"
-            app:camera_facing="back"
-            app:camera_flash="auto"
-            app:camera_focus="continuous"
-            app:camera_permissions="camera" />
+            android:visibility="gone"/>
 
     </LinearLayout>
 

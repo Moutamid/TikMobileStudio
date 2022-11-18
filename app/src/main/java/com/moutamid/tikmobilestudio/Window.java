@@ -8,7 +8,10 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
+import android.hardware.Camera;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -22,16 +25,13 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import static android.content.Context.WINDOW_SERVICE;
+import java.util.concurrent.ExecutionException;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.camerakit.CameraKit;
-import com.camerakit.CameraKitView;
 
 public class Window extends ContextWrapper {
 
@@ -44,18 +44,17 @@ public class Window extends ContextWrapper {
     private WindowManager mWindowManager;
     private WindowManager mWindowManagerB;
     private LayoutInflater layoutInflater;
-    public CameraKitView cameraKitView;
     TextView name;
     ImageView imageView,rotateImg;
+    private Camera mCamera;
+    private CameraPreview mPreview;
+    private LinearLayout cameraPreview;
+    private boolean cameraFront = true;
     //private long interval = 0;
     private int flag = 1;
     SharedPreferences sharedPreferences;
     private CustomOrientationEventListener customOrientationEventListener;
 
-    final int ROTATION_O    = 1;
-    final int ROTATION_90   = 2;
-    final int ROTATION_180  = 3;
-    final int ROTATION_270  = 4;
 
     @SuppressLint("WrongConstant")
     public Window(Context context){
@@ -125,31 +124,34 @@ public class Window extends ContextWrapper {
         mViewB = layoutInflater.inflate(R.layout.banner, null);
         // set onClickListener on the remove button, which removes
         // the view from the window
-        cameraKitView = mView.findViewById(R.id.camera);
-//        cameraKitView.onPause();
-//        cameraKitView.onStop();
-        cameraKitView.onStart();
-        //cameraKitView.requestPermissions(activity);
+
+        cameraPreview = mView.findViewById(R.id.camera);
         name = mViewB.findViewById(R.id.name);
         imageView = mViewB.findViewById(R.id.close);
       //  rotateImg = mViewB.findViewById(R.id.rotate);
         name.setText(sharedPreferences.getName());
-        cameraKitView.setFacing(CameraKit.FACING_FRONT);
-        //data.data(cameraKitView);
-
+        int cameraId = findFrontFacingCamera();
+        mCamera =  Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        mCamera.setDisplayOrientation(90);
+        mPreview = new CameraPreview(context, mCamera);
+       // setCameraDisplayOrientation((MainActivity) context,cameraId,mCamera);
+        cameraPreview.addView(mPreview);
+        mCamera.startPreview();
         imageView.setOnClickListener(v -> {
             close();
             stopService(new Intent(getApplicationContext(), ForegroundService.class));
-            cameraKitView.onPause();
-            cameraKitView.onStop();
+            mCamera.stopPreview();
+            //cameraKitView.onPause();
+           // cameraKitView.onStop();
         });
         // Define the position of the
         // window within the screen
         mParams.gravity = Gravity.TOP | Gravity.START;
+        mParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_USER;
 
         mWindowManager = (WindowManager)context.getSystemService(WINDOW_SERVICE);
 
-        mParamsB.gravity = Gravity.BOTTOM | Gravity.END;
+        mParamsB.gravity = Gravity.BOTTOM;
         mWindowManagerB = (WindowManager)context.getSystemService(WINDOW_SERVICE);
 
        // mParams.screenOrientation = port;
@@ -159,41 +161,62 @@ public class Window extends ContextWrapper {
         int orientation = this.getResources().getConfiguration().orientation;
         switch(orientation) {
             case Configuration.ORIENTATION_PORTRAIT:
-                mParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-                mParamsB.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                cameraKitView.setRotation(cameraKitView.getRotation() + 90);
                 break;
             case Configuration.ORIENTATION_LANDSCAPE:
-                mParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-                mParamsB.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                cameraKitView.setRotation(cameraKitView.getRotation() + 90);
                 break;
-        }
-        if (rotate.equals("SCREEN_ORIENTATION_PORTRAIT")){
-            mParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-            mParamsB.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
-        }else {
-
-            mParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-            mParamsB.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-        }
-
-        rotateImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                if (mView.getRotation() == 0){
-                    mView.animate().rotation(mView.getRotation() + 90);
-                    mViewB.animate().rotation(mViewB.getRotation() + 90);
-                }else {
-                    mView.animate().rotation(mView.getRotation() - 90);
-                    mViewB.animate().rotation(mViewB.getRotation() -90);
-                }
-            }
-        });*/
-
-
+        }*/
+      //  cameraKitView.setRotation(cameraKitView.getRotation() + 90);
         dragDrop(mParams);
         dragDropB(mParamsB);
+
     }
+
+
+    private int findFrontFacingCamera() {
+
+        int cameraId = -1;
+        // Search for the front facing camera
+        int numberOfCameras = Camera.getNumberOfCameras();
+        for (int i = 0; i < numberOfCameras; i++) {
+            Camera.CameraInfo info = new Camera.CameraInfo();
+            Camera.getCameraInfo(i, info);
+            if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                cameraId = i;
+                cameraFront = true;
+                break;
+            }
+        }
+        return cameraId;
+
+    }
+
+    public static void setCameraDisplayOrientation(Activity activity,
+                                                   int cameraId, android.hardware.Camera camera) {
+        android.hardware.Camera.CameraInfo info =
+                new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
+        int rotation = activity.getWindowManager().getDefaultDisplay()
+                .getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0: degrees = 0; break;
+            case Surface.ROTATION_90: degrees = 90; break;
+            case Surface.ROTATION_180: degrees = 180; break;
+            case Surface.ROTATION_270: degrees = 270; break;
+        }
+
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // compensate the mirror
+        } else {  // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
+        camera.setDisplayOrientation(result);
+    }
+
 
     private void dragDropB(WindowManager.LayoutParams params) {
         name.setOnTouchListener(new View.OnTouchListener() {
@@ -215,9 +238,11 @@ public class Window extends ContextWrapper {
                         //get the touch location
                         initialTouchX = event.getRawX();
                         initialTouchY = event.getRawY();
+                        mParamsB.gravity = Gravity.BOTTOM | Gravity.END;
                         return true;
                     case MotionEvent.ACTION_UP:
                         flag = flag3;
+                        mParamsB.gravity = Gravity.BOTTOM | Gravity.END;
                         if (Math.abs(initialTouchX - event.getRawX()) >= 25f){
                             return flag;
                         }else {
@@ -244,7 +269,7 @@ public class Window extends ContextWrapper {
 
 
     public void dragDrop(WindowManager.LayoutParams params){
-        cameraKitView.setOnTouchListener(new View.OnTouchListener() {
+        cameraPreview.setOnTouchListener(new View.OnTouchListener() {
             private int initialX;
             private int initialY;
             private float initialTouchX;
@@ -305,7 +330,6 @@ public class Window extends ContextWrapper {
         }
 
     }
-
 
     public void close() {
 
