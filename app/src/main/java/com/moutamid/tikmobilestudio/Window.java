@@ -130,8 +130,11 @@ public class Window extends ContextWrapper {
         imageView = mViewB.findViewById(R.id.close);
       //  rotateImg = mViewB.findViewById(R.id.rotate);
         name.setText(sharedPreferences.getName());
-        int cameraId = findFrontFacingCamera();
-        mCamera =  Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        try {
+            mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         mPreview = new CameraPreview(context, mCamera);
       //  mCamera.setDisplayOrientation(90);
        // setCameraDisplayOrientation((MainActivity) context,cameraId,mCamera);

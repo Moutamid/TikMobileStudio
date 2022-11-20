@@ -84,7 +84,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     private void setRotation(){
         if (mOrientationEventListener == null) {
-            mOrientationEventListener = new OrientationEventListener(context, SensorManager.SENSOR_DELAY_NORMAL) {
+            mOrientationEventListener = new OrientationEventListener(context,
+                    SensorManager.SENSOR_DELAY_NORMAL) {
 
                 @Override
                 public void onOrientationChanged(int orientation) {
