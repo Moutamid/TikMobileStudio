@@ -132,8 +132,8 @@ public class Window extends ContextWrapper {
         name.setText(sharedPreferences.getName());
         int cameraId = findFrontFacingCamera();
         mCamera =  Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
-        mCamera.setDisplayOrientation(90);
         mPreview = new CameraPreview(context, mCamera);
+      //  mCamera.setDisplayOrientation(90);
        // setCameraDisplayOrientation((MainActivity) context,cameraId,mCamera);
         cameraPreview.addView(mPreview);
         mCamera.startPreview();
@@ -153,7 +153,6 @@ public class Window extends ContextWrapper {
 
         mParamsB.gravity = Gravity.BOTTOM;
         mWindowManagerB = (WindowManager)context.getSystemService(WINDOW_SERVICE);
-
        // mParams.screenOrientation = port;
         //mParamsB.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
       /*  String rotate = getScreenOrientation(context);
@@ -192,31 +191,59 @@ public class Window extends ContextWrapper {
 
     }
 
-    public static void setCameraDisplayOrientation(Activity activity,
-                                                   int cameraId, android.hardware.Camera camera) {
-        android.hardware.Camera.CameraInfo info =
+
+    private void checkRotation(WindowManager mWindowManager) {
+        Display display = mWindowManager.getDefaultDisplay();
+        int displayOrientation = display.getRotation();
+        android.hardware.Camera.CameraInfo cameraInfo =
                 new android.hardware.Camera.CameraInfo();
-        android.hardware.Camera.getCameraInfo(cameraId, info);
-        int rotation = activity.getWindowManager().getDefaultDisplay()
-                .getRotation();
-        int degrees = 0;
-        switch (rotation) {
-            case Surface.ROTATION_0: degrees = 0; break;
-            case Surface.ROTATION_90: degrees = 90; break;
-            case Surface.ROTATION_180: degrees = 180; break;
-            case Surface.ROTATION_270: degrees = 270; break;
+        int rotation = cameraInfo.orientation;
+        if (Surface.ROTATION_0 != displayOrientation)
+        {
+            if (Camera.CameraInfo.CAMERA_FACING_BACK == cameraInfo.facing)
+            {
+                if (Surface.ROTATION_90 == displayOrientation)
+                {
+                    rotation -= 90;
+                }
+                else if (Surface.ROTATION_180 == displayOrientation)
+                {
+                    rotation -= 180;
+                }
+                if (Surface.ROTATION_270 == displayOrientation)
+                {
+                    rotation -= 270;
+                }
+
+                if (rotation < 0)
+                {
+                    rotation += 360;
+                }
+            }
+            else
+            {
+                if (Surface.ROTATION_90 == displayOrientation)
+                {
+                    rotation += 90;
+                }
+                else if (Surface.ROTATION_180 == displayOrientation)
+                {
+                    rotation += 180;
+                }
+                if (Surface.ROTATION_270 == displayOrientation)
+                {
+                    rotation += 270;
+                }
+
+                rotation %= 360;
+            }
         }
 
-        int result;
-        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            result = (info.orientation + degrees) % 360;
-            result = (360 - result) % 360;  // compensate the mirror
-        } else {  // back-facing
-            result = (info.orientation - degrees + 360) % 360;
-        }
-        camera.setDisplayOrientation(result);
+        Log.d("TAG", "Camera orientation (" + cameraInfo.orientation + ", " + displayOrientation + ", " + rotation + ")");
+        Toast.makeText(this, ""+rotation, Toast.LENGTH_SHORT).show();
+        Camera.Parameters parameters = mCamera.getParameters();
+        parameters.setRotation(rotation);
     }
-
 
     private void dragDropB(WindowManager.LayoutParams params) {
         name.setOnTouchListener(new View.OnTouchListener() {

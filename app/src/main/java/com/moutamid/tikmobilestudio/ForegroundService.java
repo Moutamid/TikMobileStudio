@@ -12,10 +12,14 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.hardware.Camera;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.SyncStateContract;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -48,7 +52,6 @@ public class ForegroundService extends Service {
 
         // create an instance of Window class
         // and display the content on screen
-
         Window window=new Window(this);
         window.open();
     }
@@ -68,6 +71,61 @@ public class ForegroundService extends Service {
             stopSelfResult(startId);
         }
         return START_STICKY;*/
+
+    }
+
+
+
+    private void checkRotation() {
+        Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        int displayOrientation = display.getRotation();
+        android.hardware.Camera.CameraInfo cameraInfo =
+                new android.hardware.Camera.CameraInfo();
+        int rotation = cameraInfo.orientation;
+        if (Surface.ROTATION_0 != displayOrientation)
+        {
+            if (Camera.CameraInfo.CAMERA_FACING_BACK == cameraInfo.facing)
+            {
+                if (Surface.ROTATION_90 == displayOrientation)
+                {
+                    rotation -= 90;
+                }
+                else if (Surface.ROTATION_180 == displayOrientation)
+                {
+                    rotation -= 180;
+                }
+                if (Surface.ROTATION_270 == displayOrientation)
+                {
+                    rotation -= 270;
+                }
+
+                if (rotation < 0)
+                {
+                    rotation += 360;
+                }
+            }
+            else
+            {
+                if (Surface.ROTATION_90 == displayOrientation)
+                {
+                    rotation += 90;
+                }
+                else if (Surface.ROTATION_180 == displayOrientation)
+                {
+                    rotation += 180;
+                }
+                if (Surface.ROTATION_270 == displayOrientation)
+                {
+                    rotation += 270;
+                }
+
+                rotation %= 360;
+            }
+        }
+
+        Log.d("TAG", "Camera orientation (" + cameraInfo.orientation + ", " + displayOrientation + ", " + rotation + ")");
+        Toast.makeText(this, ""+rotation, Toast.LENGTH_SHORT).show();
+
     }
 
     // for android version >=O we need to create

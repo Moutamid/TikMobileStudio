@@ -41,13 +41,13 @@ public class StartActivity extends AppCompatActivity {
         startCamera();
     }
 
+
     private void startCamera() {
         int cameraId = findFrontFacingCamera();
         mCamera =  Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
      //   mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
         mPreview = new CameraPreview(this, mCamera);
         cameraPreview.addView(mPreview);
-        setCameraDisplayOrientation(StartActivity.this,cameraId,mCamera);
         mCamera.startPreview();
     }
 
