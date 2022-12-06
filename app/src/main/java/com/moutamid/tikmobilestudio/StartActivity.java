@@ -29,6 +29,7 @@ public class StartActivity extends AppCompatActivity {
     private LinearLayout cameraPreview;
     private boolean cameraFront = true;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,11 +45,16 @@ public class StartActivity extends AppCompatActivity {
 
     private void startCamera() {
         int cameraId = findFrontFacingCamera();
-        mCamera =  Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
-     //   mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
-        mPreview = new CameraPreview(this, mCamera);
-        cameraPreview.addView(mPreview);
-        mCamera.startPreview();
+        try {
+            mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+            //  mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
+            mPreview = new CameraPreview(this, mCamera);
+            cameraPreview.addView(mPreview);
+            //setCameraDisplayOrientation(MainActivity.this,cameraId,mCamera);
+            mCamera.startPreview();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 
@@ -100,25 +106,6 @@ public class StartActivity extends AppCompatActivity {
         super.onStart();
     }
 
-    public void onResume() {
-
-        super.onResume();
-        if(mCamera == null) {
-            mCamera = Camera.open();
-            mCamera.setDisplayOrientation(90);
-            mPreview.refreshCamera(mCamera);
-
-        }else {
-        }
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        //when on Pause, release camera in order to be used from other applications
-        releaseCamera();
-    }
 
     private void releaseCamera() {
         // stop and release camera

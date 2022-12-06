@@ -57,11 +57,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             return;
         }
         // stop preview before making changes
-        try {
+     /*   try {
             mCamera.stopPreview();
         } catch (Exception e) {
             // ignore: tried to stop a non-existent preview
-        }
+        }*/
         // set preview size and make any resize, rotate or
         // reformatting changes here
         // start preview with new settings
@@ -115,7 +115,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                     }
 
                     if (lastOrientation != mOrientation) {
-                        changeRotation(mOrientation, lastOrientation);
+                        changeRotation(mOrientation);
                     }
                 }
             };
@@ -125,7 +125,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    private void changeRotation(int orientation, int lastOrientation) {
+    private void changeRotation(int orientation) {
         switch (orientation) {
             case ORIENTATION_PORTRAIT_NORMAL:
                 mCamera.setDisplayOrientation(90);

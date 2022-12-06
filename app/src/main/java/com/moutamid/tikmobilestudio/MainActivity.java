@@ -38,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     EditText name;
     private Executor executor = Executors.newSingleThreadExecutor();
     private int REQUEST_CODE_PERMISSIONS = 1001;
-    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA",
+            "android.permission.WRITE_EXTERNAL_STORAGE"};
     SharedPreferences sharedPreferences;
     private int flag;
 
@@ -94,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         Toast.makeText(this, "Service is already running, Please Close that First", Toast.LENGTH_SHORT).show();
                     }
-                    checkOverlayPermission();
                     startService();
                 } else
                 Toast.makeText(this, "No Camera Detected", Toast.LENGTH_SHORT).show();
@@ -104,12 +104,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void startCamera() {
         int cameraId = findFrontFacingCamera();
-        mCamera =  Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
-      //  mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
-        mPreview = new CameraPreview(this, mCamera);
-        cameraPreview.addView(mPreview);
-        setCameraDisplayOrientation(MainActivity.this,cameraId,mCamera);
-        mCamera.startPreview();
+        try {
+            mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+            //  mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
+            mPreview = new CameraPreview(this, mCamera);
+            cameraPreview.addView(mPreview);
+            //setCameraDisplayOrientation(MainActivity.this,cameraId,mCamera);
+            mCamera.startPreview();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 
@@ -184,6 +188,9 @@ public class MainActivity extends AppCompatActivity {
                     Intent i = new Intent(this, ForegroundService.class);
                     startService(i);
                 }
+            }else {
+                Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                startActivity(myIntent);
             }
         }else{
             Intent i = new Intent(this, ForegroundService.class);
@@ -221,13 +228,13 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
 
         super.onResume();
-        if(mCamera == null) {
+      /*  if(mCamera == null) {
             mCamera = Camera.open();
             mCamera.setDisplayOrientation(90);
             mPreview.refreshCamera(mCamera);
         }else {
 
-        }
+        }*/
 
     }
 
@@ -235,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         //when on Pause, release camera in order to be used from other applications
-        releaseCamera();
+        //releaseCamera();
     }
 
     private void releaseCamera() {

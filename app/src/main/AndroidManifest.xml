@@ -35,7 +35,9 @@
         <activity
             android:name=".StartActivity"
             android:exported="false"
-            tools:ignore="Instantiatable" />
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"/>
         <activity
             android:name=".SplashScreenActivity"
             android:exported="true">
@@ -48,8 +50,9 @@
         <activity
             android:name=".MainActivity"
             android:exported="false"
+            android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait"
-            ></activity>
+            android:launchMode="singleTop"></activity>
     </application>
 
 </manifest>
