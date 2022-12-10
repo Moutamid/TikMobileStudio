@@ -7,15 +7,19 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.view.Display;
 import android.view.Surface;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -48,11 +52,13 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout cameraPreview;
     private boolean cameraFront = true;
 
+    @SuppressLint("WrongConstant")
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR | ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         name = findViewById(R.id.name);
         start = findViewById(R.id.btnStart);
         cameraPreview = findViewById(R.id.camera);
@@ -97,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     startService();
                 } else
-                Toast.makeText(this, "No Camera Detected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "No Camera Detected", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -105,9 +111,11 @@ public class MainActivity extends AppCompatActivity {
     private void startCamera() {
         int cameraId = findFrontFacingCamera();
         try {
+
+            Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
             mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
             //  mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
-            mPreview = new CameraPreview(this, mCamera);
+            mPreview = new CameraPreview(this, mCamera,cameraPreview);
             cameraPreview.addView(mPreview);
             //setCameraDisplayOrientation(MainActivity.this,cameraId,mCamera);
             mCamera.startPreview();

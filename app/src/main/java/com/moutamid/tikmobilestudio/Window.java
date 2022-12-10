@@ -130,12 +130,15 @@ public class Window extends ContextWrapper {
         imageView = mViewB.findViewById(R.id.close);
       //  rotateImg = mViewB.findViewById(R.id.rotate);
         name.setText(sharedPreferences.getName());
+        mWindowManager = (WindowManager)context.getSystemService(WINDOW_SERVICE);
+        Display display = mWindowManager.getDefaultDisplay();
+
         try {
             mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
         }catch (Exception e){
             e.printStackTrace();
         }
-        mPreview = new CameraPreview(context, mCamera);
+        mPreview = new CameraPreview(context, mCamera,cameraPreview);
       //  mCamera.setDisplayOrientation(90);
        // setCameraDisplayOrientation((MainActivity) context,cameraId,mCamera);
         cameraPreview.addView(mPreview);
@@ -152,7 +155,6 @@ public class Window extends ContextWrapper {
         mParams.gravity = Gravity.TOP | Gravity.START;
         mParams.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_USER;
 
-        mWindowManager = (WindowManager)context.getSystemService(WINDOW_SERVICE);
 
         mParamsB.gravity = Gravity.BOTTOM;
         mWindowManagerB = (WindowManager)context.getSystemService(WINDOW_SERVICE);

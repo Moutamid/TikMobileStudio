@@ -16,7 +16,8 @@
         android:layout_marginBottom="20dp"
         android:adjustViewBounds="true"
         android:keepScreenOn="true"
-        android:visibility="visible"/>
+        android:visibility="visible"
+        android:orientation="vertical" />
 
 
 </RelativeLayout>

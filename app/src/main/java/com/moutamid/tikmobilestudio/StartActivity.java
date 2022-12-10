@@ -9,10 +9,13 @@ import androidx.lifecycle.LifecycleRegistry;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
 import android.hardware.Camera;
 import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.Surface;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -29,11 +32,12 @@ public class StartActivity extends AppCompatActivity {
     private LinearLayout cameraPreview;
     private boolean cameraFront = true;
 
-    @SuppressLint("MissingInflatedId")
+    @SuppressLint({"MissingInflatedId", "WrongConstant"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR | ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         cameraPreview = findViewById(R.id.camera);
         nameTv = findViewById(R.id.name);
         closeImg = findViewById(R.id.close);
@@ -46,9 +50,10 @@ public class StartActivity extends AppCompatActivity {
     private void startCamera() {
         int cameraId = findFrontFacingCamera();
         try {
+            Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
             mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
             //  mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
-            mPreview = new CameraPreview(this, mCamera);
+            mPreview = new CameraPreview(this, mCamera,cameraPreview);
             cameraPreview.addView(mPreview);
             //setCameraDisplayOrientation(MainActivity.this,cameraId,mCamera);
             mCamera.startPreview();
