@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
             Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
             mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
             //  mCamera.setDisplayOrientation((int) (cameraPreview.getRotation() + 90));
-            mPreview = new CameraPreview(this, mCamera,cameraPreview);
+            mPreview = new CameraPreview(this, mCamera);
             cameraPreview.addView(mPreview);
             //setCameraDisplayOrientation(MainActivity.this,cameraId,mCamera);
             mCamera.startPreview();

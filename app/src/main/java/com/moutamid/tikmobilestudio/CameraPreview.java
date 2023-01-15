@@ -1,20 +1,16 @@
 package com.moutamid.tikmobilestudio;
 
-import static android.content.Context.WINDOW_SERVICE;
-
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.util.Log;
-import android.view.Display;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.WindowManager;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,18 +22,20 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private OrientationEventListener mOrientationEventListener;
     private int mOrientation =  -1;
 
+    public List<Camera.Size> mSupportedPreviewSizes;
+
     private static final int ORIENTATION_PORTRAIT_NORMAL =  1;
     private static final int ORIENTATION_PORTRAIT_INVERTED =  2;
     private static final int ORIENTATION_LANDSCAPE_NORMAL =  3;
     private static final int ORIENTATION_LANDSCAPE_INVERTED =  4;
-    private LinearLayout linearLayout;
+    private String rotation = "";
 
-    public CameraPreview(Context context, Camera camera,LinearLayout linearLayout) {
+    public CameraPreview(Context context, Camera camera) {
         super(context);
         this.context = context;
         mCamera = camera;
-        this.linearLayout = linearLayout;
         mHolder = getHolder();
+        mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
         mHolder.addCallback(this);
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -56,77 +54,108 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
 
-    public void refreshCamera(Camera camera) {
+    public void refreshCamera(Camera camera, int w, int h) {
         if (mHolder.getSurface() == null) {
             // preview surface does not exist
             return;
         }
-        // stop preview before making changes
-     /*   try {
-            mCamera.stopPreview();
-        } catch (Exception e) {
-            // ignore: tried to stop a non-existent preview
-        }*/
         // set preview size and make any resize, rotate or
         // reformatting changes here
         // start preview with new settings
         setCamera(camera);
         try {
             setRotation();
-            final Camera.Parameters params = mCamera.getParameters();
+           // final Camera.Parameters params = mCamera.getParameters();
             // viewParams is from the view where the preview is displayed
-            List<Camera.Size> mSupportedPreviewSizes = params.getSupportedPreviewSizes();
-            Camera.Size mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, linearLayout.getWidth(), linearLayout.getHeight());
-            params.setPreviewSize(mPreviewSize.width,mPreviewSize.height);
-            mCamera.setParameters(params);
+            final Camera.Parameters parameters = mCamera.getParameters();
+            Camera.Size optimalSize = CameraUtil.getOptimalPreviewSize(context,mCamera,w,h,rotation);
+            parameters.setPreviewSize(optimalSize.width, optimalSize.height);
+            //  parameters.setPictureSize(optimalSize.width, optimalSize.height);
+            //mCamera.setDisplayOrientation(CameraUtil.getCameraOrientation(context));
+            mCamera.setParameters(parameters);
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
         } catch (Exception e) {
             Log.d(VIEW_LOG_TAG, "Error starting camera preview: " + e.getMessage());
         }
     }
+    /*@Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
 
-    public Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
+        final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
+
+      //  mPreviewSize = CameraUtil.getOptimalPreviewSize(context,mCamera,width,height);
+        if (mSupportedPreviewSizes != null) {
+
+            mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
+
+        }
+
+        if (mPreviewSize != null) {
+
+            float ratio;
+
+            if (mPreviewSize.height >= mPreviewSize.width)
+
+                ratio = (float) mPreviewSize.height / (float) mPreviewSize.width;
+
+            else
+
+                ratio = (float) mPreviewSize.width / (float) mPreviewSize.height;
+
+
+            // One of these methods should be used, second method squishes preview slightly
+
+            setMeasuredDimension(width, (int) (width * ratio));
+
+            //        setMeasuredDimension((int) (width * ratio), height);
+
+        }
+    }*/
+
+    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
+        //Log.d(TAG, "getOptimalPreviewSize");
         final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio = (double) h / w;
 
-        if (sizes == null)
-            return null;
+        if (sizes == null) return null;
 
         Camera.Size optimalSize = null;
         double minDiff = Double.MAX_VALUE;
 
-        int targetHeight = h;
-
-        for (Camera.Size size : sizes) {
-            double ratio = (double) size.height / size.width;
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE)
-                continue;
-
-            if (Math.abs(size.height - targetHeight) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(size.height - targetHeight);
-            }
+        //The supported sizes we get from the camera doesn't change w and h when
+        //the phone rotate, therefore we have to adjust our ratio when
+        //the app rotate in order to find the optimal ratio.
+        double targetRatio;
+        if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            targetRatio = (double) h / w;
+        } else {
+            targetRatio = (double) w / h;
         }
 
-        if (optimalSize == null) {
-            minDiff = Double.MAX_VALUE;
-            for (Camera.Size size : sizes) {
-                if (Math.abs(size.height - targetHeight) < minDiff) {
-                    optimalSize = size;
-                    minDiff = Math.abs(size.height - targetHeight);
-                }
+
+        Log.d("ratio", "TargetRatio=" + targetRatio);
+
+        // Try to find an size match aspect ratio and size
+        for (Camera.Size size : sizes) {
+            double ratio = (double) size.width / size.height;
+            //Log.d(TAG, "Trying ratio=" + ratio + ", w=" + size.width + ", h=" + size.height);
+
+            //find the optimal ratio
+            if (Math.abs(ratio - targetRatio) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(ratio - targetRatio);
             }
         }
 
         return optimalSize;
     }
-
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         // If your preview can change or rotate, take care of those events here.
         // Make sure to stop the preview before resizing or reformatting it.
 
-        refreshCamera(mCamera);
+        refreshCamera(mCamera,w,h);
     }
 
     public int setCameraDisplayOrientation(Activity activity, int cameraId) {
@@ -275,24 +304,37 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     private void changeRotation(int orientation) {
+
+
         switch (orientation) {
             case ORIENTATION_PORTRAIT_NORMAL:
                 mCamera.setDisplayOrientation(90);
+                rotation = "portrait";
                 Log.v("CameraActivity", "Orientation = 90");
+                Log.v("Rotation", rotation);
                 break;
             case ORIENTATION_LANDSCAPE_NORMAL:
                 mCamera.setDisplayOrientation(0);
+                rotation = "landscape";
                 Log.v("CameraActivity", "Orientation = 0");
+                Log.v("Rotation", rotation);
                 break;
             case ORIENTATION_PORTRAIT_INVERTED:
+                rotation = "portrait";
                 mCamera.setDisplayOrientation(270);
                 Log.v("CameraActivity", "Orientation = 270");
+                Log.v("Rotation", rotation);
                 break;
             case ORIENTATION_LANDSCAPE_INVERTED:
+                rotation = "landscape";
                 mCamera.setDisplayOrientation(180);
+                Log.v("Rotation", rotation);
                 Log.v("CameraActivity", "Orientation = 180");
                 break;
         }
+        //  List<Camera.Size> mSupportedPreviewSizes = parameters.getSupportedPreviewSizes();
+
+
     }
 
 
