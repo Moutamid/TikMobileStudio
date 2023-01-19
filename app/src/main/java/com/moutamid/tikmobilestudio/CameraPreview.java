@@ -22,20 +22,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private OrientationEventListener mOrientationEventListener;
     private int mOrientation =  -1;
 
-    public List<Camera.Size> mSupportedPreviewSizes;
 
     private static final int ORIENTATION_PORTRAIT_NORMAL =  1;
     private static final int ORIENTATION_PORTRAIT_INVERTED =  2;
     private static final int ORIENTATION_LANDSCAPE_NORMAL =  3;
     private static final int ORIENTATION_LANDSCAPE_INVERTED =  4;
-    private String rotation = "";
+    private String rotation = "portrait";
 
     public CameraPreview(Context context, Camera camera) {
         super(context);
         this.context = context;
         mCamera = camera;
         mHolder = getHolder();
-        mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
         mHolder.addCallback(this);
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -68,10 +66,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
            // final Camera.Parameters params = mCamera.getParameters();
             // viewParams is from the view where the preview is displayed
             final Camera.Parameters parameters = mCamera.getParameters();
-            Camera.Size optimalSize = CameraUtil.getOptimalPreviewSize(context,mCamera,w,h,rotation);
+            Camera.Size optimalSize = getOptimalPreviewSize(mCamera,w,h);
             parameters.setPreviewSize(optimalSize.width, optimalSize.height);
-            //  parameters.setPictureSize(optimalSize.width, optimalSize.height);
-            //mCamera.setDisplayOrientation(CameraUtil.getCameraOrientation(context));
             mCamera.setParameters(parameters);
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
@@ -115,42 +111,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }*/
 
-    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
-        //Log.d(TAG, "getOptimalPreviewSize");
-        final double ASPECT_TOLERANCE = 0.1;
-
-        if (sizes == null) return null;
-
-        Camera.Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
-
-        //The supported sizes we get from the camera doesn't change w and h when
-        //the phone rotate, therefore we have to adjust our ratio when
-        //the app rotate in order to find the optimal ratio.
-        double targetRatio;
-        if (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-            targetRatio = (double) h / w;
-        } else {
-            targetRatio = (double) w / h;
-        }
-
-
-        Log.d("ratio", "TargetRatio=" + targetRatio);
-
-        // Try to find an size match aspect ratio and size
-        for (Camera.Size size : sizes) {
-            double ratio = (double) size.width / size.height;
-            //Log.d(TAG, "Trying ratio=" + ratio + ", w=" + size.width + ", h=" + size.height);
-
-            //find the optimal ratio
-            if (Math.abs(ratio - targetRatio) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(ratio - targetRatio);
-            }
-        }
-
-        return optimalSize;
-    }
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         // If your preview can change or rotate, take care of those events here.
         // Make sure to stop the preview before resizing or reformatting it.
@@ -221,6 +181,61 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         return (result);
 
+    }
+
+    public Camera.Size getOptimalPreviewSize(Camera camera, int w, int h) {
+        if (camera == null) {
+            return null;
+        }
+
+        List<Camera.Size> sizes = camera.getParameters().getSupportedPreviewSizes();
+        double targetRatio = 0;
+        if (rotation.equals("portrait")) {
+
+            Log.d("p_width",""+w);
+            Log.d("p_height",""+h);
+            targetRatio = (double) h / w;
+
+            Log.d("p_target",""+targetRatio);
+        }
+        else if (rotation.equals("landscape")){
+
+            targetRatio = (double) w / h;
+            Log.d("l_width",""+w);
+            Log.d("l_height",""+h);
+
+            Log.d("l_target",""+targetRatio);
+        }
+
+        final double ASPECT_TOLERANCE = 0.1;
+        if (sizes == null) return null;
+
+        Camera.Size optimalSize = null;
+        double minDiff = Double.MAX_VALUE;
+
+        int targetHeight = h;
+
+        // Try to find an size match aspect ratio and size
+        for (Camera.Size size : sizes) {
+            double ratio = (double) size.width / size.height;
+            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
+            if (Math.abs(size.height - targetHeight) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(size.height - targetHeight);
+            }
+        }
+
+        // Cannot find the one match the aspect ratio, ignore the requirement
+        if (optimalSize == null) {
+            minDiff = Double.MAX_VALUE;
+            for (Camera.Size size : sizes) {
+                if (Math.abs(size.height - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.height - targetHeight);
+                }
+            }
+        }
+        return optimalSize;
     }
 
 
@@ -304,8 +319,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
 
     private void changeRotation(int orientation) {
-
-
         switch (orientation) {
             case ORIENTATION_PORTRAIT_NORMAL:
                 mCamera.setDisplayOrientation(90);
